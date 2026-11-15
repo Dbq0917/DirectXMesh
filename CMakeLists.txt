@@ -260,6 +260,35 @@ if(TOOL_EXES)
   message(STATUS "Building tools: ${TOOL_EXES}")
 endif()
 
+#--- Cross-platform vertex cache optimization tool
+option(BUILD_MESHOPTIMIZER "Build cross-platform meshoptimizer tool" ON)
+
+if(BUILD_MESHOPTIMIZER)
+  add_executable(meshoptimizer
+    Meshoptimizer/meshoptimizer.cpp
+    Meshoptimizer/MeshCacheOpt.cpp
+    Meshoptimizer/MeshCacheOpt.h
+    Meshoptimizer/ObjLoader.h)
+  target_compile_features(meshoptimizer PRIVATE cxx_std_17)
+  target_include_directories(meshoptimizer PRIVATE Meshoptimizer Utilities)
+  target_link_libraries(meshoptimizer PRIVATE ${PROJECT_NAME})
+  list(APPEND TOOL_EXES meshoptimizer)
+
+  if(NOT WIN32)
+    find_package(directxmath CONFIG QUIET)
+    find_package(directx-headers CONFIG QUIET)
+    if(NOT directxmath_FOUND OR NOT directx-headers_FOUND)
+      message(FATAL_ERROR
+        "meshoptimizer on non-Windows platforms requires DirectXMath and DirectX-Headers")
+    endif()
+    target_link_libraries(meshoptimizer PRIVATE
+      Microsoft::DirectXMath Microsoft::DirectX-Headers)
+    target_compile_definitions(meshoptimizer PRIVATE USING_DIRECTX_HEADERS)
+  elseif(directxmath_FOUND)
+    target_link_libraries(meshoptimizer PRIVATE Microsoft::DirectXMath)
+  endif()
+endif()
+
 if(MSVC)
     foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
       target_compile_options(${t} PRIVATE /Wall /GR-)
@@ -367,7 +396,7 @@ if(BUILD_TOOLS AND WIN32 AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT meshconvert)
 endif()
 
-if(BUILD_TOOLS AND (NOT VCPKG_TOOLCHAIN))
+if((BUILD_TOOLS OR BUILD_MESHOPTIMIZER) AND (NOT VCPKG_TOOLCHAIN))
     foreach(t IN LISTS TOOL_EXES)
       install(TARGETS ${t} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endforeach()

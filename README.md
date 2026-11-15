@@ -34,6 +34,10 @@ These components are designed to work without requiring any content from the leg
 
 > This tool does not support legacy ``.X`` files, but can export ``CMO``, ``SDKMESH``, and ``VBO`` files.
 
+* ``Meshoptimizer\``
+
+  * A cross-platform command-line tool that reorders faces and vertices to improve the post-transform vertex cache hit rate without modifying the rendered geometry. See ``Meshoptimizer/README.md`` for the ``.meshbin`` container format and usage.
+
 * ``build\``
 
   * Contains miscellaneous build files and scripts.
